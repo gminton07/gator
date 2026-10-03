@@ -12,6 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Old config: %+v\n", cfg)
 
 	cfg.SetUser("Gabe")
 
@@ -20,7 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Config: %v\n", cfg2)
+	fmt.Printf("New config: %+v\n", cfg2)
 
 
 
