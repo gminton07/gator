@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gminton07/gator/internal/config"
 )
@@ -14,15 +15,31 @@ func main() {
 	}
 	fmt.Printf("Old config: %+v\n", cfg)
 
-	cfg.SetUser("Gabe")
+	sta := state{
+		cfg: &cfg,
+	}
 
-	cfg2, err := config.Read()
+	cmds := commands{
+		handle: make(map[string]func(*state, command) error),
+	}
+
+	cmds.register("login", handlerLogin)
+
+	// Parse cli args
+	if len(os.Args) < 2 {
+		fmt.Println("Program requires CLI command")
+		os.Exit(1)
+	}
+
+	cmd := command{
+		name: os.Args[1],
+		args: os.Args[2:],
+	}
+
+	err = cmds.run(&sta, cmd)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("New config: %+v\n", cfg2)
-
-
-
+	fmt.Printf("New config: %+v\n", cfg)
 }
