@@ -121,3 +121,13 @@ func handlerUsers(s * state, cmd command) error {
 
 	return nil
 }
+
+func handlerAgg(s *state, cmd command) error {
+	rssFeed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("RSSFeed: %+v\n", rssFeed)
+	return nil
+}

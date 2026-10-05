@@ -11,6 +11,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// convert all context.Background() instances to single global instance
+
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
@@ -37,6 +39,7 @@ func main() {
 	cmds.register("register", handlerRegister)
 	cmds.register("reset",    handlerReset)
 	cmds.register("users",    handlerUsers)
+	cmds.register("agg",      handlerAgg)
 
 	// Parse cli args
 	if len(os.Args) < 2 {
