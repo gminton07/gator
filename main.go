@@ -1,11 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/gminton07/gator/internal/config"
+	"github.com/gminton07/gator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -13,17 +16,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Old config: %+v\n", cfg)
+
+	// Connect to database
+	db, err := sql.Open("postgres", cfg.DbURL)
+
+	// Get queries
+	dbQueries := database.New(db)
 
 	sta := state{
+		db:  dbQueries,
 		cfg: &cfg,
 	}
 
+	// Command registry
 	cmds := commands{
 		handle: make(map[string]func(*state, command) error),
 	}
 
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
 
 	// Parse cli args
 	if len(os.Args) < 2 {
@@ -40,6 +51,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("New config: %+v\n", cfg)
 }

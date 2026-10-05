@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/gminton07/gator/internal/config"
+	"github.com/gminton07/gator/internal/database"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *config.Config
 }
 
@@ -38,15 +45,48 @@ func (c *commands) register(name string, f func(*state, command) error) {
 
 // Basic handler function signature
 func handlerLogin(s *state, cmd command) error {
-	args := cmd.args
+	if len(cmd.args) == 0 {
+		return errors.New("Login handler must be given 'user' argument")
+	}
 
-	if len(args) == 0 {
-		return errors.New("Login func must be given 'user' argument")
+	// Poll from database
+	name := cmd.args[0]
+	_, err := s.db.GetUser(context.Background(), name)
+	if err != nil {
+		fmt.Printf("error: %w", err)
+		os.Exit(1)
 	}
 
 	// Set new username
-	s.cfg.SetUser(args[0])
+	s.cfg.SetUser(name)
 
-	fmt.Printf("User %s added.\n", args)
+	fmt.Printf("User %s logged in.\n", name)
+	return nil
+}
+
+func handlerRegister(s *state, cmd command) error {
+	if len(cmd.args) < 1 {
+		return errors.New("Register handler must be given 'user' argument")
+	}
+
+	// Add user to database
+	name := cmd.args[0]
+	currTime := time.Now()
+	usr, err := s.db.CreateUser(context.Background(), database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: currTime,
+		UpdatedAt: currTime,
+		Name:      name,
+	})
+	if err != nil {
+		fmt.Printf("error: %w\n", err)
+		os.Exit(1)
+	}
+
+	// Set current user
+	s.cfg.SetUser(name)
+
+	fmt.Printf("User %s created\n", name)
+	fmt.Printf("Data: %+v\n", usr)
 	return nil
 }
