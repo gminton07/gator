@@ -33,8 +33,9 @@ func main() {
 		handle: make(map[string]func(*state, command) error),
 	}
 
-	cmds.register("login", handlerLogin)
+	cmds.register("login",    handlerLogin)
 	cmds.register("register", handlerRegister)
+	cmds.register("reset",    handlerReset)
 
 	// Parse cli args
 	if len(os.Args) < 2 {

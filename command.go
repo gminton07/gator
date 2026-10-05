@@ -53,7 +53,7 @@ func handlerLogin(s *state, cmd command) error {
 	name := cmd.args[0]
 	_, err := s.db.GetUser(context.Background(), name)
 	if err != nil {
-		fmt.Printf("error: %w", err)
+		fmt.Printf("error in GetUser: %w", err)
 		os.Exit(1)
 	}
 
@@ -79,7 +79,7 @@ func handlerRegister(s *state, cmd command) error {
 		Name:      name,
 	})
 	if err != nil {
-		fmt.Printf("error: %w\n", err)
+		fmt.Printf("error in CreateUser: %w\n", err)
 		os.Exit(1)
 	}
 
@@ -88,5 +88,17 @@ func handlerRegister(s *state, cmd command) error {
 
 	fmt.Printf("User %s created\n", name)
 	fmt.Printf("Data: %+v\n", usr)
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	// Ignore extra args
+
+	err := s.db.Reset(context.Background())
+	if err != nil {
+		fmt.Printf("error in Reset: %w\n", err)
+		os.Exit(1)
+	}
+
 	return nil
 }
