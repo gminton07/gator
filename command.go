@@ -46,14 +46,14 @@ func (c *commands) register(name string, f func(*state, command) error) {
 // Basic handler function signature
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.args) == 0 {
-		return errors.New("Login handler must be given 'user' argument")
+		return errors.New("error: Login handler must be given 'user' argument")
 	}
 
 	// Poll from database
 	name := cmd.args[0]
 	_, err := s.db.GetUser(context.Background(), name)
 	if err != nil {
-		fmt.Printf("error in GetUser: %w", err)
+		fmt.Printf("error in GetUser: %w\n", err)
 		os.Exit(1)
 	}
 
@@ -66,7 +66,7 @@ func handlerLogin(s *state, cmd command) error {
 
 func handlerRegister(s *state, cmd command) error {
 	if len(cmd.args) < 1 {
-		return errors.New("Register handler must be given 'user' argument")
+		return errors.New("error: Register handler must be given 'user' argument")
 	}
 
 	// Add user to database
@@ -103,7 +103,7 @@ func handlerReset(s *state, cmd command) error {
 	return nil
 }
 
-func handlerUsers(s * state, cmd command) error {
+func handlerUsers(s *state, cmd command) error {
 	users, err := s.db.GetUsers(context.Background())
 	if err != nil {
 		fmt.Printf("error in GetUsers: %w\n, err")
@@ -129,5 +129,41 @@ func handlerAgg(s *state, cmd command) error {
 	}
 
 	fmt.Printf("RSSFeed: %+v\n", rssFeed)
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	// Parse CLI args
+	if len(cmd.args) < 2 {
+		return errors.New("error: AddFeed handler must be given 'name' and 'url' arguments")
+	}
+	feedName := cmd.args[0]
+	feedURL := cmd.args[1]
+		
+	// Get user data from database
+	// Get username from config
+	name := s.cfg.CurrentUserName
+
+	usr, err := s.db.GetUser(context.Background(), name)
+	if err != nil {
+		fmt.Printf("error in GetUser: %w", err)
+		os.Exit(1)
+	}
+	usrID := usr.ID
+	
+	// Create feed
+	currTime := time.Now()
+	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+		CreatedAt: currTime,
+		UpdatedAt: currTime,
+		Name:      feedName,
+		Url:       feedURL,
+		UserID:    usrID,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Feed: %+v\n", feed)
 	return nil
 }
