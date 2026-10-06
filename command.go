@@ -146,7 +146,7 @@ func handlerAddFeed(s *state, cmd command) error {
 
 	usr, err := s.db.GetUser(context.Background(), name)
 	if err != nil {
-		fmt.Printf("error in GetUser: %w", err)
+		fmt.Printf("error in GetUser: %w\n", err)
 		os.Exit(1)
 	}
 	usrID := usr.ID
@@ -165,5 +165,22 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 
 	fmt.Printf("Feed: %+v\n", feed)
+	return nil
+}
+
+func handlerFeeds(s *state, cmd command) error {
+	// Ignore CLI args
+
+	// Call SQL Library
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		fmt.Printf("error in GetFeeds: %w\n", err)
+		os.Exit(1)
+	}
+
+	for _, v := range feeds {
+		fmt.Printf("%s\n\tURL: %s, By: %s\n", v.Name, v.Url, v.Name_2)
+	}
+
 	return nil
 }
