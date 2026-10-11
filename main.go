@@ -44,6 +44,7 @@ func main() {
 	cmds.register("feeds",     handlerFeeds)
 	cmds.register("follow",    middlewareLoggedIn(handlerFollow))
 	cmds.register("following", middlewareLoggedIn(handlerFollowing))
+	cmds.register("unfollow",  middlewareLoggedIn(handlerUnfollow))
 
 	// Parse cli args
 	if len(os.Args) < 2 {
