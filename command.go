@@ -133,9 +133,9 @@ func handlerAgg(s *state, cmd command) error {
 }
 
 func handlerAddFeed(s *state, cmd command) error {
-	// Parse CLI args
+	// parse cli args
 	if len(cmd.args) < 2 {
-		return errors.New("error: AddFeed handler must be given 'name' and 'url' arguments")
+		return errors.New("error: addfeed handler must be given 'name' and 'url' arguments")
 	}
 	feedName := cmd.args[0]
 	feedURL := cmd.args[1]
@@ -165,6 +165,16 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 
 	fmt.Printf("Feed: %+v\n", feed)
+
+	// Create feed_follow entry
+	err = handlerFollow(
+		s,
+		command{args: []string{feedURL}},
+	)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -180,6 +190,72 @@ func handlerFeeds(s *state, cmd command) error {
 
 	for _, v := range feeds {
 		fmt.Printf("%s\n\tURL: %s, By: %s\n", v.Name, v.Url, v.Name_2)
+	}
+
+	return nil
+}
+
+func handlerFollow(s *state, cmd command) error {
+	// parse cli args
+	if len(cmd.args) < 1 {
+		return errors.New("error: follow handler must be given 'url' argument")
+	}
+	url := cmd.args[0]
+
+	// Get user data from database
+	usrName := s.cfg.CurrentUserName
+	usr, err := s.db.GetUser(context.Background(), usrName)
+	if err != nil {
+		fmt.Printf("error in GetUser: %w\n", err)
+		os.Exit(1)
+	}
+	usrID := usr.ID
+	fmt.Printf("user_id: %v\n", usrID)
+
+	// Get feed data from database
+	feed, err := s.db.GetFeed(
+		context.Background(),
+		url,
+	)
+	if err != nil {
+		fmt.Printf("error in GetFeed: %s\n", err)
+		os.Exit(1)
+	}
+	fdID := feed.ID
+	fmt.Printf("feed_id: %v\n", fdID)
+
+	// Call SQL Library
+	currTime := time.Now()
+	feedFollow, err := s.db.CreateFeedFollow(
+		context.Background(),
+		database.CreateFeedFollowParams{
+			CreatedAt: currTime,
+			UpdatedAt: currTime,
+			UserID:    usrID,
+			FeedID:    fdID,
+		},
+	)
+
+	// Print output
+	//fmt.Printf("Feed: %+v\nFeed name: %s\nUser name: %s\n", feedFollow, feed.Name, usrName)
+	fmt.Printf("FeedFollow: %+v\n", feedFollow)
+
+	return nil
+}
+
+func handlerFollowing(s *state, cmd command) error {
+	// Ignore args
+
+	feedFollows, err := s.db.GetFeedFollowsForUser(
+		context.Background(),
+		s.cfg.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	// Print out feedFollows
+	for _, v := range feedFollows {
+		fmt.Printf("%s (URL: %s)\n", v.FeedName, v.FeedUrl)
 	}
 
 	return nil
