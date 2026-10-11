@@ -132,7 +132,7 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	// parse cli args
 	if len(cmd.args) < 2 {
 		return errors.New("error: addfeed handler must be given 'name' and 'url' arguments")
@@ -140,17 +140,6 @@ func handlerAddFeed(s *state, cmd command) error {
 	feedName := cmd.args[0]
 	feedURL := cmd.args[1]
 		
-	// Get user data from database
-	// Get username from config
-	name := s.cfg.CurrentUserName
-
-	usr, err := s.db.GetUser(context.Background(), name)
-	if err != nil {
-		fmt.Printf("error in GetUser: %w\n", err)
-		os.Exit(1)
-	}
-	usrID := usr.ID
-	
 	// Create feed
 	currTime := time.Now()
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
@@ -158,7 +147,7 @@ func handlerAddFeed(s *state, cmd command) error {
 		UpdatedAt: currTime,
 		Name:      feedName,
 		Url:       feedURL,
-		UserID:    usrID,
+		UserID:    user.ID,
 	})
 	if err != nil {
 		return err
@@ -170,6 +159,7 @@ func handlerAddFeed(s *state, cmd command) error {
 	err = handlerFollow(
 		s,
 		command{args: []string{feedURL}},
+		user,
 	)
 	if err != nil {
 		return err
@@ -195,22 +185,12 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	// parse cli args
 	if len(cmd.args) < 1 {
 		return errors.New("error: follow handler must be given 'url' argument")
 	}
 	url := cmd.args[0]
-
-	// Get user data from database
-	usrName := s.cfg.CurrentUserName
-	usr, err := s.db.GetUser(context.Background(), usrName)
-	if err != nil {
-		fmt.Printf("error in GetUser: %w\n", err)
-		os.Exit(1)
-	}
-	usrID := usr.ID
-	fmt.Printf("user_id: %v\n", usrID)
 
 	// Get feed data from database
 	feed, err := s.db.GetFeed(
@@ -231,7 +211,7 @@ func handlerFollow(s *state, cmd command) error {
 		database.CreateFeedFollowParams{
 			CreatedAt: currTime,
 			UpdatedAt: currTime,
-			UserID:    usrID,
+			UserID:    user.ID,
 			FeedID:    fdID,
 		},
 	)
@@ -243,12 +223,12 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
+func handlerFollowing(s *state, cmd command, user database.User) error {
 	// Ignore args
 
 	feedFollows, err := s.db.GetFeedFollowsForUser(
 		context.Background(),
-		s.cfg.CurrentUserName)
+		user.Name)
 	if err != nil {
 		return err
 	}
