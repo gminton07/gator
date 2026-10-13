@@ -123,12 +123,27 @@ func handlerUsers(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	rssFeed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	// parse cli arguments
+	if len(cmd.args) < 1 {
+		return errors.New("error: agg handler requires 'time_between_reqs' argument")
+	}
+	
+	time_between_reqs, err := time.ParseDuration(cmd.args[0])
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("RSSFeed: %+v\n", rssFeed)
+	fmt.Printf("Collecting feeds every %v\n", time_between_reqs)
+
+	// Timing loop
+	ticker := time.NewTicker(time_between_reqs)
+	for ; ; <-ticker.C {
+		err := scrapeFeeds(s)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
