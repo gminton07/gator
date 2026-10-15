@@ -15,8 +15,9 @@ import (
 )
 
 type state struct {
-	db  *database.Queries
-	cfg *config.Config
+	db   *database.Queries
+	cfg  *config.Config
+	cmds commands
 }
 
 type command struct {
@@ -311,6 +312,16 @@ func handlerBrowse(s *state, cmd command, user database.User) error {
 
 	for _, v := range posts {
 		fmt.Printf("Title: %s, URL: %s, Description: %s, Feed Name: %s\n", v.Title, v.Url, v.Description.String, v.FeedName)
+	}
+
+	return nil
+}
+
+func handlerHelp(s *state, cmd command) error {
+	// Ignore CLI args
+
+	for k, _ := range s.cmds.handle {
+		fmt.Printf("%s\n", k)
 	}
 
 	return nil

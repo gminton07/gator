@@ -26,8 +26,8 @@ func main() {
 	dbQueries := database.New(db)
 
 	sta := state{
-		db:  dbQueries,
-		cfg: &cfg,
+		db:   dbQueries,
+		cfg:  &cfg,
 	}
 
 	// Command registry
@@ -46,6 +46,9 @@ func main() {
 	cmds.register("following", middlewareLoggedIn(handlerFollowing))
 	cmds.register("unfollow",  middlewareLoggedIn(handlerUnfollow))
 	cmds.register("browse",    middlewareLoggedIn(handlerBrowse))
+	cmds.register("help",      handlerHelp)
+
+	sta.cmds = cmds
 
 	// Parse cli args
 	if len(os.Args) < 2 {
