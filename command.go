@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -274,6 +275,43 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 		return err
 	}
 
+
+	return nil
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	// Limit arg
+	var limit int32
+	if len(cmd.args) < 1 {
+		limit = 2
+	} else {
+		//limit = int32(cmd.args[0])
+		v, err := strconv.ParseInt(
+			cmd.args[0],
+			10, 
+			32,
+		)
+		if err != nil {
+			return err
+		}
+		limit = int32(v)
+	}
+
+	// Show posts
+	posts, err := s.db.GetPosts(
+		context.Background(),
+		database.GetPostsParams{
+			Name:  user.Name,
+			Limit: limit,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range posts {
+		fmt.Printf("Title: %s, URL: %s, Description: %s, Feed Name: %s\n", v.Title, v.Url, v.Description.String, v.FeedName)
+	}
 
 	return nil
 }
